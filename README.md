@@ -1,11 +1,10 @@
 # transcribe-media
 
+[English](README.md) | [Chinese](README.zh-CN.md)
+
 An Agent Skill that turns local audio/video files and public single-item media
 links into text. It prefers existing captions or official transcripts and uses
 VoiceFlow ASR only when no usable text is available.
-
-> 中文简介：这是一个音视频与播客转文字 Skill。它会优先提取网页已有字幕，
-> 没有可用文本时再通过 VoiceFlow ASR 转写。
 
 ## Features
 
