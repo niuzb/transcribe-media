@@ -1,0 +1,4 @@
+interface:
+  display_name: "音视频与播客转文字"
+  short_description: "安全转写本地音视频、公开媒体链接与播客，并优先复用已有字幕"
+  default_prompt: "使用 $transcribe-media 转写这个本地音视频、播客或公开媒体链接，并优先提取已有字幕。"
