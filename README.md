@@ -180,4 +180,6 @@ Repository layout:
 
 ## License
 
-Licensed under the [Apache License 2.0](LICENSE).
+The GitHub source repository is licensed under the
+[Apache License 2.0](LICENSE). Releases distributed through ClawHub are also
+available under MIT-0, as required by the ClawHub registry terms.

@@ -180,4 +180,5 @@ node --test scripts/*.test.mjs
 
 ## 许可证
 
-本项目采用 [Apache License 2.0](LICENSE) 许可证。
+GitHub 源码仓库采用 [Apache License 2.0](LICENSE) 许可证。根据 ClawHub
+平台的发布条款，通过 ClawHub 分发的版本同时以 MIT-0 授权。
