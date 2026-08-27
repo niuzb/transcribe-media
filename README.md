@@ -154,5 +154,4 @@ Repository layout:
 
 ## License
 
-No license has been selected yet. Add a license file before granting others
-permission to copy, modify, or redistribute the project.
+Licensed under the [Apache License 2.0](LICENSE).
