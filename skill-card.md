@@ -54,11 +54,11 @@ Mitigation: Prefer the documented token flow, keep tokens out of command argumen
 
 **Output Parameters:** [1D]
 
-**Other Properties Related to Output:** [Returns obtained transcript text verbatim and removes at most the trailing command-output newline.]
+**Other Properties Related to Output:** [Returns transcript text verbatim by default; when explicitly requested, uses the transcript to summarize, answer questions, or extract information.]
 
 ## Skill Version(s):
 
-1.0.4 (ClawHub release)
+1.0.5 (ClawHub release)
 
 ## Ethical Considerations:
 

@@ -1,6 +1,6 @@
 ---
 name: transcribe-media
-description: Turn local audio or video files and public single-item media links into text. Prefer existing captions or official transcripts, use VoiceFlow ASR only when no usable text exists, and securely obtain any required token. Use for audio, video, or podcast transcription (including Xiaoyuzhou), subtitle or dialogue extraction, and text retrieval from public media pages.
+description: Fetch and read transcripts from YouTube videos, public podcast episodes (including Xiaoyuzhou), other public single-item media links, and local audio or video files. Use when the user needs the full transcript, a summary, answers about the content, or extracted information. Prefer existing captions or official transcripts and use VoiceFlow ASR only when no usable text exists.
 allowed-tools: Read,Write,Bash
 metadata:
   openclaw:
@@ -19,6 +19,12 @@ metadata:
 
 # Media transcription and direct text output
 
+Fetch and read transcripts from YouTube videos, public podcast episodes, other
+supported public media pages, and local audio or video files. Use this skill to
+obtain a full transcript, summarize media, answer questions about its content,
+or extract requested information. Unless the user explicitly asks for analysis
+or transformation, return the source transcript verbatim.
+
 ## Core workflow
 
 Process requests in this order:
@@ -31,8 +37,10 @@ Process requests in this order:
    exact action and obtain the user's explicit approval for that action.
 4. Only when no usable text exists and the user approves remote processing,
    obtain the required VoiceFlow token and run ASR.
-5. Return the script's text verbatim. Do not proactively proofread, correct,
-   rewrite, summarize, translate, or add content absent from the source.
+5. Treat the obtained transcript as the source of truth. Return it verbatim when
+   the user asks only for a transcript. When the user explicitly asks for a
+   summary, answers, or information extraction, perform only that requested task
+   and ground the response in the transcript.
 
 ## Require explicit approval
 
@@ -185,7 +193,7 @@ Do not send client hot words to the remote VoiceFlow path. They may contain
 private names, and the backend does not support prompts. Only an explicitly
 approved offline ASR tool may consume locally generated client hot words.
 
-## Extract text and reply directly
+## Use the transcript
 
 On success, standard output contains the final text or JSON. Local media produces
 a speech transcript; a public URL produces existing page text or an ASR result.
@@ -193,10 +201,16 @@ Read only the text from standard output. If the output is JSON, extract only its
 transcript text value. Never mix progress, diagnostics, or internal state from
 standard error into the result.
 
-Send the extracted text verbatim as the final response. Do not proactively
-proofread, correct, polish, summarize, translate, generate an extra file, or add
-unrelated explanation. Do not alter the content except to remove the single
-trailing newline added to terminate command output.
+For a transcript-only request, send the extracted text verbatim as the final
+response. Do not proactively proofread, correct, polish, summarize, translate,
+generate an extra file, or add unrelated explanation. Do not alter the content
+except to remove the single trailing newline added to terminate command output.
+
+When the user explicitly asks for a summary, an answer about the media, or
+specific information to be extracted, fulfill that request using the transcript
+as the source of truth. Do not invent details that are absent from the
+transcript; state briefly when the requested information is not present or is
+uncertain.
 
 Treat empty standard output as no text obtained and follow failure handling. Do
 not repeat transcription after text has been obtained successfully.
@@ -213,5 +227,5 @@ and ask for approval, then continue only after an explicit affirmative response.
 
 ## Version
 
-Version 1.6.1: document VoiceFlow's immediate post-transcription media deletion
-and bounded private-storage lifecycle fallback.
+Version 1.7.0: expose transcript-based summarization, question answering, and
+information extraction while preserving transcript-first grounding.
