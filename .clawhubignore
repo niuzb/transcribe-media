@@ -4,4 +4,5 @@ LICENSE
 README.md
 README.zh-CN.md
 skill-card.md
+demo/
 scripts/*.test.mjs

@@ -6,6 +6,12 @@
 
 `transcribe-media` 是一个面向 Agent 的媒体转写 Skill。给它一个公开视频链接或本地文件，它会优先提取页面已有字幕；没有可用字幕时，再自动获取音频并使用 VoiceFlow ASR 转写。
 
+## 30 秒演示
+
+[![观看 Transcribe Media 30 秒演示](demo/transcribe-media-demo-poster.png)](demo/transcribe-media-demo.mp4)
+
+[观看或下载带字幕的 MP4 演示](demo/transcribe-media-demo.mp4)。视频无需声音即可理解，完整展示字幕优先、明确授权和转写输出流程。
+
 ## 支持哪些网站？
 
 只需提供一个**公开、可直接访问的单视频或播客单集链接**。

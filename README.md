@@ -6,6 +6,12 @@ English | [简体中文](README.zh-CN.md)
 
 `transcribe-media` is an Agent Skill for media transcription. Give it a public media URL or a local file: it first looks for captions already provided by the page, and only retrieves audio and calls VoiceFlow ASR when usable text is unavailable.
 
+## 30-second demo
+
+[![Watch the 30-second Transcribe Media demo](demo/transcribe-media-demo-poster.png)](demo/transcribe-media-demo.mp4)
+
+[Watch or download the captioned MP4 demo](demo/transcribe-media-demo.mp4). It works without audio and shows the caption-first, consent-gated transcription flow.
+
 ## Which sites are supported?
 
 Provide a **public, directly accessible URL for one video or podcast episode**.
