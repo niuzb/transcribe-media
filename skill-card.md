@@ -12,6 +12,12 @@ This skill is ready for use.
 
 MIT-0
 
+### ClawHub Catalog:
+
+**Categories:** Creative, Productivity
+
+**Topics:** transcription, audio, video, podcast, subtitles
+
 ## Use Case:
 
 Developers, creators, and employees use this skill to obtain raw transcripts from supported local media files, public single-video links, and public podcast episode URLs. It is intended for caption-first extraction with ASR fallback when usable page text is unavailable.
@@ -52,7 +58,7 @@ Mitigation: Prefer the documented token flow, keep tokens out of command argumen
 
 ## Skill Version(s):
 
-1.0.3 (ClawHub release)
+1.0.4 (ClawHub release)
 
 ## Ethical Considerations:
 
