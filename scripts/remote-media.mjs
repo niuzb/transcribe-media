@@ -39,6 +39,8 @@ const AUTHENTICATED_AVAILABILITY = new Set([
 const LIVE_STATUSES = new Set(["is_live", "is_upcoming", "post_live"]);
 const XIAOYUZHOU_HOSTS = new Set(["www.xiaoyuzhoufm.com", "xiaoyuzhoufm.com"]);
 const XIAOYUZHOU_EPISODE_PATH = /^\/episode\/[0-9a-f]{24}\/?$/iu;
+export const REMOTE_ASR_CONSENT_MESSAGE =
+  "Remote ASR consent is required. No media was uploaded. After the user explicitly agrees to send this media over HTTPS to VoiceFlow at https://asr.audioflow123.com and to a provider-issued signed HTTPS object-storage URL for transcription, rerun with --allow-remote-asr. VoiceFlow deletes the uploaded media as soon as transcription reaches a terminal state, before returning that result. If immediate best-effort deletion is interrupted, the private storage bucket's mandatory lifecycle removes the object within 2–3 days.";
 const MEDIA_FORMAT_SELECTOR = [
   "bestaudio[ext=m4a]",
   "bestaudio[ext=webm]",
@@ -590,7 +592,7 @@ async function downloadMedia(
     }
   }
   throw new Error(
-    "No VoiceFlow-compatible media format was available. Installing FFmpeg may add support.",
+    "No VoiceFlow-compatible media format was available. FFmpeg may add support; do not install it without the user's explicit approval.",
   );
 }
 
@@ -624,6 +626,8 @@ async function removeTemporaryDirectory(directory) {
 }
 
 export async function resolveRemoteInput({
+  allowRemoteAsr = false,
+  allowToolDownload = false,
   source,
   language,
   signal,
@@ -638,7 +642,11 @@ export async function resolveRemoteInput({
   const forceAudio = XIAOYUZHOU_HOSTS.has(url.hostname.toLowerCase());
   await assertPublicHostname(url, lookupImpl, signal);
   progress("Preparing the verified media downloader...\n");
-  const executable = await resolveYtDlpImpl({ signal, environment });
+  const executable = await resolveYtDlpImpl({
+    allowDownload: allowToolDownload,
+    signal,
+    environment,
+  });
   progress(
     forceAudio
       ? "Checking the Xiaoyuzhou episode media...\n"
@@ -672,10 +680,14 @@ export async function resolveRemoteInput({
       } catch (error) {
         if (signal?.aborted) throw error;
         progress(
-          "The existing subtitle was unusable; falling back to audio transcription.\n",
+          "The existing subtitle was unusable; remote ASR would be required.\n",
         );
       }
-    } else if (forceAudio) {
+    }
+    if (!allowRemoteAsr) {
+      throw new Error(REMOTE_ASR_CONSENT_MESSAGE);
+    }
+    if (forceAudio) {
       progress("Downloading Xiaoyuzhou episode audio for transcription.\n");
     } else {
       progress(

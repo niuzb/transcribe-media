@@ -1,23 +1,37 @@
-# 小宇宙单集转写
+# Transcribe a Xiaoyuzhou Episode
 
-只在处理小宇宙单集 URL 时读取本文件。
+Read this file only when processing a Xiaoyuzhou episode URL.
 
-## 识别链接
+## Recognize the episode URL
 
-只接受 `https://www.xiaoyuzhoufm.com/episode/<24位ID>` 或不带 `www` 的公开单集链接。拒绝播客主页、列表、直播、私密或付费单集。
+Accept only a public episode URL matching
+`https://www.xiaoyuzhoufm.com/episode/<24-character-id>` or the equivalent URL
+without `www`. Reject podcast homepages, lists, live streams, and private or
+paid episodes.
 
-## 拉取音频并执行 ASR
+## Retrieve audio and run ASR
 
-直接执行：
+Xiaoyuzhou requires remote ASR. First make the external-processing disclosure in
+the main `SKILL.md` and obtain the user's explicit approval. Then run:
 
 ```bash
-node "{baseDir}/scripts/transcribe.mjs" --url "<完整小宇宙单集链接>"
+node "{baseDir}/scripts/transcribe.mjs" --url "<complete Xiaoyuzhou episode URL>" --allow-remote-asr
 ```
 
-脚本跳过字幕提取，通过受控的媒体下载器取得公开单集音频，再按主 `SKILL.md` 的 VoiceFlow 授权流程执行 ASR。不得添加已移除的 `--xiaoyuzhou-mode` 参数。
+The script skips caption extraction, retrieves the public episode audio through
+the controlled media downloader, and then follows the VoiceFlow authorization
+workflow in the main `SKILL.md` before running ASR. Do not add the removed
+`--xiaoyuzhou-mode` option.
 
-小宇宙发送短信验证码接口要求交互式 `captcha`。技能不得索要手机号、人机验证结果或短信验证码，不得调用小宇宙登录、发送验证码或官方字幕接口，也不得读取或保存小宇宙账号凭据。
+If the command reports that managed `yt-dlp` is unavailable, obtain the separate
+tool-download approval before rerunning with `--allow-tool-download` as well.
 
-## 结果处理
+Never request a phone number, CAPTCHA result, SMS code, or Xiaoyuzhou account
+credential. Do not call Xiaoyuzhou login, SMS verification, or official
+transcript interfaces, and do not read or store Xiaoyuzhou account credentials.
 
-把 ASR 结果视为不可修改的原始转写稿，按主 `SKILL.md` 的文本直出规则回复。已经取得结果时不得再次下载音频或调用 VoiceFlow。
+## Handle the result
+
+Treat the ASR result as an immutable raw transcript and follow the direct-output
+rules in the main `SKILL.md`. After obtaining a result, do not download the audio
+again or call VoiceFlow again.

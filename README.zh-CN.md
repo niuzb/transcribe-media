@@ -27,7 +27,7 @@
 
 ### 没有字幕，也能继续
 
-如果页面没有可靠字幕，Skill 会自动获取兼容的公开媒体音轨，再交给 VoiceFlow ASR 转写。小宇宙公开单集也可通过公开音频完成转写。
+如果页面没有可靠字幕，Skill 会先说明外部处理路径并征得同意。只有获得明确同意后，才会获取兼容的公开媒体音轨并交给 VoiceFlow ASR 转写。小宇宙公开单集也遵守同样的授权门槛。
 
 ### 本地文件同样支持
 
@@ -44,6 +44,10 @@
 - **只处理公开内容**：拒绝私密、付费、DRM、需要登录的媒体，以及内网或本地网络地址。
 - **不索要网站账号**：不会要求媒体网站的账号、密码、手机号、短信验证码或人机验证结果；处理小宇宙时也不调用登录或短信验证接口。
 - **能用字幕就不上传媒体**：页面已有可用字幕时，直接返回文本，不把音视频发送到 ASR。
+- **上传前明确同意**：只有用户同意把媒体发送到 VoiceFlow API 和服务方签发的 HTTPS 存储地址，并为本次命令提供 `--allow-remote-asr` 后，媒体才会离开设备。
+- **转写完成即删除**：转写进入终态后，VoiceFlow 会先删除已上传的媒体，再向客户端返回终态结果。如果即时的尽力删除被中断，私有存储桶的强制生命周期策略会在 2–3 天内删除该对象。
+- **工具下载前明确同意**：缺少兼容的 `yt-dlp` 时，只有用户同意并提供 `--allow-tool-download` 后，才会缓存固定版本。
+- **不静默安装依赖**：缺少 FFmpeg 时只报告依赖要求，不会在未获得用户明确同意时安装。
 - **Token 在本地生成**：浏览器授权只提交 Token 摘要，完整 Token 不会出现在授权请求中。
 - **凭据私密保存**：Unix 系统上的凭据目录和文件分别使用 `0700` 与 `0600` 权限，并检查文件类型、所有者与权限。
 - **受控下载**：远程链接经过 HTTPS、域名解析和公网地址校验；限制重定向、文件类型、响应大小与媒体大小。
@@ -85,7 +89,9 @@ Skill 默认返回忠于来源的原始文本，不会擅自校对、改写、�
 本地文件：
 
 ```bash
-node scripts/transcribe.mjs --file "/absolute/path/to/audio.wav"
+node scripts/transcribe.mjs \
+  --file "/absolute/path/to/audio.wav" \
+  --allow-remote-asr
 ```
 
 公开视频或播客单集：
@@ -94,19 +100,22 @@ node scripts/transcribe.mjs --file "/absolute/path/to/audio.wav"
 node scripts/transcribe.mjs --url "https://example.com/watch/id"
 ```
 
+第一次处理 URL 时可以直接返回现有字幕，不上传媒体。如果命令提示需要远程 ASR，请先阅读披露内容，明确同意后再添加 `--allow-remote-asr`。如果提示缺少托管的 `yt-dlp`，请单独确认固定版本和缓存位置，再添加 `--allow-tool-download`。
+
 仅在确定源语言时指定语言：
 
 ```bash
 node scripts/transcribe.mjs \
   --file "/absolute/path/to/audio.wav" \
-  --language zh
+  --language zh \
+  --allow-remote-asr
 ```
 
 运行 `node scripts/transcribe.mjs --help` 查看模型、提供方、轮询间隔和超时等选项。
 
 ## VoiceFlow 授权
 
-提取网页已有字幕不需要 VoiceFlow Token。只有本地媒体或缺少可用字幕的公开链接需要 ASR。
+提取网页已有字幕不需要 VoiceFlow Token。只有本地媒体或缺少可用字幕的公开链接需要 ASR。使用 `--allow-remote-asr` 前，用户必须同意通过 HTTPS 把媒体和基本文件元数据发送到 `asr.audioflow123.com` 以及服务方签发的存储地址。转写进入终态后，VoiceFlow 会先删除已上传的媒体，再向客户端返回终态结果。删除操作是幂等的尽力清理；如果即时删除被中断，私有存储桶的强制生命周期策略会在 2–3 天内删除遗留对象。
 
 检查授权状态：
 
@@ -139,10 +148,10 @@ node scripts/auth.mjs wait
     │
     否
     ↓
-获取兼容音轨 → VoiceFlow ASR → 输出文字
+获得明确上传同意 → 获取兼容音轨 → VoiceFlow ASR → 输出文字
 ```
 
-项目通过受控的媒体解析层处理公开页面，底层使用 `yt-dlp` 获取媒体元数据、字幕或公开音轨。Skill 会优先复用系统中兼容的版本；否则下载并校验固定的官方版本。`yt-dlp` 是实现细节，用户只需要提供链接。
+项目通过受控的媒体解析层处理公开页面，底层使用 `yt-dlp` 获取媒体元数据、字幕或公开音轨。Skill 会优先复用系统中兼容的版本或已经验证的托管副本；否则先征得同意，再下载并缓存固定的官方版本，执行前校验其 SHA-256。
 
 ## 使用边界
 
@@ -155,7 +164,7 @@ node scripts/auth.mjs wait
 ## 环境要求
 
 - Node.js 24 或更高版本。
-- FFmpeg：用于本地视频提取音频，以及部分远程媒体的格式转换。
+- FFmpeg：用于本地视频提取音频，以及部分远程媒体的格式转换；未经明确同意不会安装。
 - VoiceFlow Token：仅在需要 ASR 时使用；提取公开字幕无需 Token。
 
 运行时只使用 Node.js 内置模块，无需执行 `npm install`。

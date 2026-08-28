@@ -27,16 +27,48 @@ Process requests in this order:
    link.
 2. Prefer captions or an official transcript already exposed by the page. After
    obtaining usable text, do not download or transcribe the media again.
-3. Only when no usable text exists, obtain the required VoiceFlow token and run
-   ASR.
-4. Return the script's text verbatim. Do not proactively proofread, correct,
+3. Before downloading a managed tool or sending media off-device, disclose the
+   exact action and obtain the user's explicit approval for that action.
+4. Only when no usable text exists and the user approves remote processing,
+   obtain the required VoiceFlow token and run ASR.
+5. Return the script's text verbatim. Do not proactively proofread, correct,
    rewrite, summarize, translate, or add content absent from the source.
+
+## Require explicit approval
+
+Do not treat a transcription request by itself as approval to modify the host or
+upload media. Consent flags apply only to the current command and must never be
+persisted or added speculatively.
+
+If the script reports that `yt-dlp` is unavailable, show the user the reported
+version, official source, and cache directory. Ask whether it may download and
+cache that pinned, SHA-256-verified release. Only after an affirmative response,
+rerun the command with `--allow-tool-download`. Never install FFmpeg or another
+system dependency without separately explaining the change and obtaining the
+user's explicit approval.
+
+Before adding `--allow-remote-asr`, tell the user that:
+
+- the local media or downloaded/extracted audio, plus its filename, content type,
+  and size, will be sent over HTTPS to the VoiceFlow API at
+  `https://asr.audioflow123.com` and to a provider-issued signed HTTPS object
+  storage URL;
+- the VoiceFlow token is sent only to the API, not to the signed storage URL;
+- VoiceFlow deletes the uploaded media as soon as transcription reaches a
+  terminal state, before returning that terminal result. The deletion is
+  idempotent and best-effort; if it is interrupted, the private storage bucket's
+  mandatory lifecycle policy removes the object within 2–3 days; and
+- no media has been uploaded yet.
+
+Ask a direct yes-or-no question. Add `--allow-remote-asr` only after the user
+explicitly agrees. If the user declines or does not answer, stop without upload.
 
 ## Obtain a VoiceFlow token
 
 A public media page may expose captions or an official transcript. Run the
 transcription command first for a URL and authorize only if the script reports
-that ASR needs a credential.
+that ASR needs a credential. Caption extraction does not require
+`--allow-remote-asr`.
 
 Resolve the directory containing this `SKILL.md` as `{baseDir}`. Before
 transcribing a local file, inspect the connection:
@@ -75,9 +107,9 @@ credit, direct the user to the
 - Accept local FLAC, M4A, MP3, MP4, MPEG, OGG, WAV, and WebM files up to
   512 MiB.
 - For local MP4, MPEG, and WebM files, the script extracts audio locally with
-  FFmpeg and submits it as MP3. If FFmpeg is unavailable, complete the
-  installation appropriate to the current environment and continue without an
-  extra user-facing message.
+  FFmpeg and submits it as MP3 after remote-ASR approval. If FFmpeg is
+  unavailable, explain the required installation and ask for explicit approval
+  before running any package-manager or system-modifying command.
 - Accept HTTPS public single-video pages, public podcast episode pages, and
   official share links.
 - Reject channels, profiles, podcast homepages, search results, playlists, live
@@ -115,9 +147,10 @@ For Xiaoyuzhou, accept only a public episode URL matching
 without `www`. Reject podcast homepages, lists, live streams, and private or paid
 episodes.
 
-Run the normal URL command. The script must skip subtitle extraction, download
-the public episode audio through the controlled media downloader, and use
-VoiceFlow ASR. Do not add the removed `--xiaoyuzhou-mode` option.
+Xiaoyuzhou always requires public episode audio retrieval and VoiceFlow ASR.
+Complete the external-processing disclosure and obtain approval before running
+the URL command with `--allow-remote-asr`. Do not add the removed
+`--xiaoyuzhou-mode` option.
 
 Never request a phone number, CAPTCHA result, SMS code, or Xiaoyuzhou account
 credential. Do not call Xiaoyuzhou login, SMS verification, or official transcript
@@ -125,10 +158,10 @@ interfaces.
 
 ## Transcribe
 
-Use an absolute path for a local attachment:
+After explicit remote-ASR approval, use an absolute path for a local attachment:
 
 ```bash
-node "{baseDir}/scripts/transcribe.mjs" --file "/absolute/path/audio.wav"
+node "{baseDir}/scripts/transcribe.mjs" --file "/absolute/path/audio.wav" --allow-remote-asr
 ```
 
 Use the complete URL for public media:
@@ -136,6 +169,11 @@ Use the complete URL for public media:
 ```bash
 node "{baseDir}/scripts/transcribe.mjs" --url "https://example.com/watch/id"
 ```
+
+The first URL run may return captions without any media upload. If it reports
+that remote ASR is required, complete the disclosure and obtain approval before
+rerunning with `--allow-remote-asr`. Add `--allow-tool-download` only after the
+separate managed-tool approval described above.
 
 Add `--language <code>` only when the user specifies the source language or it is
 otherwise known, for example `--language en` or `--language zh`. Except for
@@ -170,8 +208,10 @@ ask for a public single-video or podcast episode link, or a local upload. If tex
 has already been obtained, deliver it instead of discarding it because of an
 unrelated later state or message.
 
+Consent-required messages are not processing failures. Present the disclosure
+and ask for approval, then continue only after an explicit affirmative response.
+
 ## Version
 
-Version 1.5.0: align the English workflow with single-item media and podcast
-handling, caption-first extraction, on-demand authorization, and Xiaoyuzhou's
-public-audio-only transcription path.
+Version 1.6.1: document VoiceFlow's immediate post-transcription media deletion
+and bounded private-storage lifecycle fallback.

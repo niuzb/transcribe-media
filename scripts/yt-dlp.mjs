@@ -411,6 +411,7 @@ export async function installYtDlpAsset(
 }
 
 export async function resolveYtDlp({
+  allowDownload = false,
   signal,
   platform = process.platform,
   arch = process.arch,
@@ -435,6 +436,21 @@ export async function resolveYtDlp({
   const targetDirectory =
     cacheDirectory ??
     ytDlpCacheDirectory({ platform, environment, homeDirectory });
+  const managedPath = path.join(targetDirectory, asset.filename);
+  if (
+    await verifyManagedBinary(managedPath, asset, {
+      signal,
+      probeVersionImpl,
+      environment,
+    })
+  ) {
+    return managedPath;
+  }
+  if (!allowDownload) {
+    throw new Error(
+      `yt-dlp is unavailable and no tool was downloaded. After the user explicitly approves downloading the pinned official yt-dlp ${YT_DLP_VERSION} release to ${targetDirectory}, rerun with --allow-tool-download. Alternatively, install it manually from ${MANUAL_INSTALL_URL}`,
+    );
+  }
   try {
     return await installYtDlpAsset(asset, {
       cacheDirectory: targetDirectory,

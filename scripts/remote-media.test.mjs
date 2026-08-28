@@ -222,6 +222,7 @@ test("falls back to one compatible media download when captions are ambiguous", 
   let mediaDownloads = 0;
   try {
     const result = await resolveRemoteInput({
+      allowRemoteAsr: true,
       source: "https://video.example/watch?id=one",
       lookupImpl: PUBLIC_LOOKUP,
       resolveYtDlpImpl: async () => "fake-yt-dlp",
@@ -258,10 +259,42 @@ test("falls back to one compatible media download when captions are ambiguous", 
   }
 });
 
+test("does not download media before remote ASR consent", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "voiceflow-remote-test-"));
+  let mediaDownloads = 0;
+  try {
+    await assert.rejects(
+      resolveRemoteInput({
+        source: "https://video.example/watch?id=one",
+        lookupImpl: PUBLIC_LOOKUP,
+        resolveYtDlpImpl: async () => "fake-yt-dlp",
+        runYtDlpImpl: async (_executable, argumentsList) => {
+          if (argumentsList.includes("--dump-single-json")) {
+            return JSON.stringify({
+              automatic_captions: {},
+              formats: [{ has_drm: false }],
+              subtitles: {},
+            });
+          }
+          mediaDownloads += 1;
+          throw new Error("must not download media");
+        },
+        temporaryBase: root,
+      }),
+      /No media was uploaded.*--allow-remote-asr/u,
+    );
+    assert.equal(mediaDownloads, 0);
+    assert.deepEqual(await readdir(root), []);
+  } finally {
+    await rm(root, { force: true, recursive: true });
+  }
+});
+
 test("downloads standalone MP3 podcast audio exposed as the best format", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "voiceflow-remote-test-"));
   try {
     const result = await resolveRemoteInput({
+      allowRemoteAsr: true,
       source: "https://podcast.example/episode/one",
       lookupImpl: PUBLIC_LOOKUP,
       resolveYtDlpImpl: async () => "fake-yt-dlp",
@@ -302,6 +335,7 @@ test("always downloads Xiaoyuzhou episode audio instead of subtitles", async () 
   const calls = [];
   try {
     const result = await resolveRemoteInput({
+      allowRemoteAsr: true,
       source: "https://www.xiaoyuzhoufm.com/episode/6a14d62e32093460940e970c",
       lookupImpl: PUBLIC_LOOKUP,
       resolveYtDlpImpl: async () => "fake-yt-dlp",
@@ -338,11 +372,12 @@ test("always downloads Xiaoyuzhou episode audio instead of subtitles", async () 
   }
 });
 
-test("suggests FFmpeg when the site exposes no compatible media format", async () => {
+test("requires approval when FFmpeg may add a compatible media format", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "voiceflow-remote-test-"));
   try {
     await assert.rejects(
       resolveRemoteInput({
+        allowRemoteAsr: true,
         source: "https://video.example/watch?id=one",
         lookupImpl: PUBLIC_LOOKUP,
         resolveYtDlpImpl: async () => "fake-yt-dlp",
@@ -356,7 +391,7 @@ test("suggests FFmpeg when the site exposes no compatible media format", async (
             : "",
         temporaryBase: root,
       }),
-      /Installing FFmpeg/u,
+      /do not install it without the user's explicit approval/u,
     );
     assert.deepEqual(await readdir(root), []);
   } finally {

@@ -8,7 +8,10 @@ import path from "node:path";
 import { Readable } from "node:stream";
 import { setTimeout as delay } from "node:timers/promises";
 import { pathToFileURL } from "node:url";
-import { resolveRemoteInput } from "./remote-media.mjs";
+import {
+  REMOTE_ASR_CONSENT_MESSAGE,
+  resolveRemoteInput,
+} from "./remote-media.mjs";
 import { loadVoiceflowToken } from "./credentials.mjs";
 
 const MAXIMUM_FILE_BYTES = 512 * 1024 * 1024;
@@ -47,7 +50,7 @@ const FFMPEG_INSTALL_MESSAGE =
 
 function printHelp() {
   process.stdout.write(
-    `VoiceFlow speech-to-text\n\nUsage:\n  node transcribe.mjs --file <path> [options]\n  node transcribe.mjs --url <https-url> [options]\n\nOptions:\n  --file <path>               Local FLAC, M4A, MP3, MP4, MPEG, OGG, WAV, or WebM file\n  --url <https-url>           Public single-video or podcast-episode URL supported by yt-dlp\n  --language <code>           Preferred source language, for example zh or en\n  --model <name>              ASR model (default: gpt-4o-transcribe-diarize)\n  --provider <name>           auto, qianwen, or bigasr (default: auto)\n  --poll-interval-ms <number> Poll interval (default: 2000)\n  --timeout-ms <number>       Overall timeout (default: 1800000)\n  --help                      Show this help\n`,
+    `VoiceFlow speech-to-text\n\nUsage:\n  node transcribe.mjs --file <path> [options]\n  node transcribe.mjs --url <https-url> [options]\n\nOptions:\n  --file <path>               Local FLAC, M4A, MP3, MP4, MPEG, OGG, WAV, or WebM file\n  --url <https-url>           Public single-video or podcast-episode URL supported by yt-dlp\n  --language <code>           Preferred source language, for example zh or en\n  --model <name>              ASR model (default: gpt-4o-transcribe-diarize)\n  --provider <name>           auto, qianwen, or bigasr (default: auto)\n  --poll-interval-ms <number> Poll interval (default: 2000)\n  --timeout-ms <number>       Overall timeout (default: 1800000)\n  --allow-remote-asr          Confirm explicit approval for this run's remote media upload\n  --allow-tool-download       Confirm explicit approval to cache the pinned yt-dlp release\n  --help                      Show this help\n`,
   );
 }
 
@@ -185,7 +188,7 @@ export function parseArguments(argumentsList) {
   if (argumentsList.includes("--help") || argumentsList.includes("-h")) {
     return { help: true };
   }
-  const supported = new Set([
+  const valueOptions = new Set([
     "--file",
     "--url",
     "--language",
@@ -194,19 +197,34 @@ export function parseArguments(argumentsList) {
     "--poll-interval-ms",
     "--timeout-ms",
   ]);
+  const booleanOptions = new Set([
+    "--allow-remote-asr",
+    "--allow-tool-download",
+  ]);
   const values = {};
-  for (let index = 0; index < argumentsList.length; index += 2) {
+  for (let index = 0; index < argumentsList.length; index += 1) {
     const name = argumentsList[index];
+    if (booleanOptions.has(name)) {
+      if (values[name] !== undefined) {
+        throw new Error(`Duplicate command argument: ${name}.`);
+      }
+      values[name] = true;
+      continue;
+    }
     const value = argumentsList[index + 1];
     if (
       name === undefined ||
       value === undefined ||
-      !supported.has(name) ||
+      !valueOptions.has(name) ||
       value.startsWith("--")
     ) {
       throw new Error("Unknown or incomplete command argument.");
     }
+    if (values[name] !== undefined) {
+      throw new Error(`Duplicate command argument: ${name}.`);
+    }
     values[name] = value;
+    index += 1;
   }
   const rawFilePath = values["--file"]?.trim();
   const sourceUrl = values["--url"]?.trim();
@@ -233,6 +251,8 @@ export function parseArguments(argumentsList) {
     ...(rawFilePath ? { filePath: path.resolve(rawFilePath) } : { sourceUrl }),
     provider,
     model,
+    allowRemoteAsr: values["--allow-remote-asr"] === true,
+    allowToolDownload: values["--allow-tool-download"] === true,
     ...(language === undefined ? {} : { language }),
     pollIntervalMs: parsePositiveInteger(
       values["--poll-interval-ms"] ?? DEFAULT_POLL_INTERVAL_MS,
@@ -794,6 +814,9 @@ export async function execute(
   } = {},
 ) {
   if (options.sourceUrl === undefined) {
+    if (!options.allowRemoteAsr) {
+      throw new Error(REMOTE_ASR_CONSENT_MESSAGE);
+    }
     const prepared = await prepareLocalMediaImpl(options.filePath, {
       signal,
       extractAudioWithFfmpegImpl,
@@ -812,6 +835,8 @@ export async function execute(
   }
 
   const remote = await resolveRemoteInputImpl({
+    allowRemoteAsr: options.allowRemoteAsr,
+    allowToolDownload: options.allowToolDownload,
     source: options.sourceUrl,
     language: options.language,
     signal,
@@ -819,6 +844,9 @@ export async function execute(
   });
   if (remote.kind === "subtitle") return remote.text;
   try {
+    if (!options.allowRemoteAsr) {
+      throw new Error(REMOTE_ASR_CONSENT_MESSAGE);
+    }
     const media = await inspectMediaImpl(remote.filePath);
     return await transcribeImpl(
       options,

@@ -70,6 +70,30 @@ test("uses a sufficiently recent system downloader without fetching", async () =
   assert.equal(fetched, false);
 });
 
+test("requires approval before downloading a managed downloader", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "voiceflow-ytdlp-test-"));
+  let fetched = false;
+  try {
+    await assert.rejects(
+      resolveYtDlp({
+        arch: "arm64",
+        cacheDirectory: root,
+        fetchImpl: async () => {
+          fetched = true;
+          throw new Error("must not fetch");
+        },
+        platform: "darwin",
+        probeVersionImpl: async () => undefined,
+      }),
+      /no tool was downloaded.*--allow-tool-download/u,
+    );
+    assert.equal(fetched, false);
+    assert.deepEqual(await readdir(root), []);
+  } finally {
+    await rm(root, { force: true, recursive: true });
+  }
+});
+
 test("does not accept a missing or outdated system downloader", async () => {
   for (const version of [undefined, "2026.06.09"]) {
     await assert.rejects(
