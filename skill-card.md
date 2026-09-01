@@ -20,7 +20,7 @@ MIT-0
 
 ## Use Case:
 
-Developers, creators, and employees use this skill to obtain raw transcripts from supported local media files, public single-video links, and public podcast episode URLs. It is intended for caption-first extraction with ASR fallback when usable page text is unavailable. An AudioFlow account with prepaid credit is required for ASR fallback; existing page captions can be extracted without consuming balance.
+Developers, creators, and employees use this skill to obtain raw transcripts from supported local media files, public single-video links, and public podcast episode URLs. It is intended for caption-first extraction with ASR fallback when usable page text is unavailable. An existing AudioFlow environment or stored credential skips account and billing onboarding; without a credential, those steps are shown only when ASR fallback is needed. Existing page captions can be extracted without consuming balance.
 
 ### Deployment Geography for Use:
 
@@ -60,7 +60,7 @@ Mitigation: Prefer the documented token flow, keep tokens out of command argumen
 
 ## Skill Version(s):
 
-1.0.6 (ClawHub release)
+1.0.7 (ClawHub release)
 
 ## Ethical Considerations:
 

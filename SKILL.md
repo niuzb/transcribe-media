@@ -1,6 +1,6 @@
 ---
 name: transcribe-media
-description: Fetch and read transcripts from YouTube videos, public podcast episodes (including Xiaoyuzhou), other public single-item media links, and local audio or video files. Use when the user needs the full transcript, a summary, answers about the content, or extracted information. Prefer existing captions or official transcripts and use AudioFlow ASR only when no usable text exists.
+description: Fetch and read transcripts from YouTube videos, public podcast episodes (including Xiaoyuzhou), other public single-item media links, and local audio or video files. Use when the user needs the full transcript, a summary, answers about the content, or extracted information. Prefer existing captions or official transcripts, use AudioFlow ASR only when no usable text exists, and skip account onboarding when an environment or stored credential is already configured.
 allowed-tools: Read,Write,Bash
 metadata:
   openclaw:
@@ -25,19 +25,31 @@ obtain a full transcript, summarize media, answer questions about its content,
 or extract requested information. Unless the user explicitly asks for analysis
 or transformation, return the source transcript verbatim.
 
-## Prerequisites
+## Credential-aware onboarding
 
-Before installing and using the complete skill, the user must:
+Resolve the directory containing this `SKILL.md` as `{baseDir}` and check the
+connection at the start of the request:
 
-1. create an account on the
-   [AudioFlow sign-up page](https://audioflow123.com/signup); and
-2. add prepaid credit on the
-   [AudioFlow billing page](https://audioflow123.com/dashboard/billing).
+```bash
+node "{baseDir}/scripts/auth.mjs" status
+```
 
-Existing captions can be extracted without consuming AudioFlow balance, but
-registration and prepaid credit are required for ASR when no usable captions
-exist. Never request or handle the user's account password or payment
-credentials.
+If the status is `connected`, whether the source is the `AUDIOFLOW_TOKEN`
+environment variable or the stored credential file, treat account registration,
+prepaid funding, and credential setup as already completed. Do not show the
+sign-up or billing prerequisites, do not start browser authorization, and
+continue directly with the transcription workflow.
+
+If the status is `not_connected`, do not interrupt a public-URL request that may
+still succeed from existing captions. Only when AudioFlow ASR is actually needed,
+tell the user to create an account on the
+[AudioFlow sign-up page](https://audioflow123.com/signup) and add prepaid credit
+on the [AudioFlow billing page](https://audioflow123.com/dashboard/billing), then
+follow the authorization flow below. Never request or handle the user's account
+password or payment credentials.
+
+An existing credential skips onboarding prompts, but it is not standing consent
+to upload media. Keep the per-run approval requirements below.
 
 ## Core workflow
 
@@ -91,14 +103,16 @@ transcription command first for a URL and authorize only if the script reports
 that ASR needs a credential. Caption extraction does not require
 `--allow-remote-asr`.
 
-Resolve the directory containing this `SKILL.md` as `{baseDir}`. Before
-transcribing a local file, inspect the connection:
+Use the connection status already checked at the start of the request. Before
+transcribing a local file, recheck it only if the credential state may have
+changed:
 
 ```bash
 node "{baseDir}/scripts/auth.mjs" status
 ```
 
-When the status is `not_connected`, start browser authorization:
+When ASR is required and the status is `not_connected`, show the conditional
+account and prepaid-credit prerequisites above, then start browser authorization:
 
 ```bash
 node "{baseDir}/scripts/auth.mjs" begin
@@ -240,6 +254,6 @@ and ask for approval, then continue only after an explicit affirmative response.
 
 ## Version
 
-Version 1.8.0: use AudioFlow branding and credential names, document account
-registration and prepaid credit prerequisites, and preserve transcript-first
-grounding with ASR fallback.
+Version 1.9.0: skip repeated account and billing onboarding when an AudioFlow
+environment or stored credential already exists, while preserving per-run
+approval for remote media processing.

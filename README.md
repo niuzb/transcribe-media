@@ -66,17 +66,16 @@ Security is the default behavior, not an add-on:
 
 ### Prerequisites
 
-Before installing and using the complete Skill:
+Install Node.js 24 or newer. At the start of a request, the Skill checks for an
+`AUDIOFLOW_TOKEN` environment variable or a valid stored credential file. If
+either credential source is already configured, it treats account registration
+and prepaid funding as complete and starts the transcription workflow without
+showing those onboarding steps again.
 
-1. Create an account on the
-   [AudioFlow sign-up page](https://audioflow123.com/signup).
-2. Sign in and add prepaid credit on the
-   [AudioFlow billing page](https://audioflow123.com/dashboard/billing).
-3. Install Node.js 24 or newer.
-
-Existing page captions can be extracted without consuming balance. Registration
-and prepaid credit are required when AudioFlow ASR is needed because no usable
-captions are available.
+When no credential exists, existing page captions can still be extracted
+without consuming balance. Only if AudioFlow ASR is needed will the Skill direct
+the user to the [AudioFlow sign-up page](https://audioflow123.com/signup) and
+[AudioFlow billing page](https://audioflow123.com/dashboard/billing).
 
 ### Install as a Codex Skill
 

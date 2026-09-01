@@ -66,15 +66,14 @@
 
 ### 前提条件
 
-安装并完整使用本 Skill 前，需要：
+本机需要安装 Node.js 24 或更高版本。每次开始任务时，Skill 会检查
+`AUDIOFLOW_TOKEN` 环境变量或有效的本地凭据文件。只要任一凭据来源已经配置，
+就视为注册、充值和连接已经完成，不再重复提示这些步骤，直接进入转写流程。
 
-1. 在 [AudioFlow 注册页面](https://audioflow123.com/signup)创建账号；
-2. 登录后前往 [AudioFlow 账单页面](https://audioflow123.com/dashboard/billing)
-   充值预付余额；
-3. 本机已安装 Node.js 24 或更高版本。
-
-提取网页已有字幕不会消耗余额；没有可用字幕、需要调用 AudioFlow ASR 时，必须
-已经完成注册和充值。
+如果没有凭据，仍可直接提取网页已有字幕且不会消耗余额。只有确实需要调用
+AudioFlow ASR 时，Skill 才会引导用户前往
+[AudioFlow 注册页面](https://audioflow123.com/signup)和
+[AudioFlow 账单页面](https://audioflow123.com/dashboard/billing)。
 
 ### 安装为 Codex Skill
 
