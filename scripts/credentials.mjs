@@ -12,7 +12,7 @@ import {
 import os from "node:os";
 import path from "node:path";
 
-export const VOICEFLOW_TOKEN_PATTERN = /^vf_stt_[A-Za-z0-9_-]{43}$/u;
+export const AUDIOFLOW_TOKEN_PATTERN = /^vf_stt_[A-Za-z0-9_-]{43}$/u;
 const POLL_SECRET_PATTERN = /^[A-Za-z0-9_-]{43}$/u;
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu;
@@ -23,7 +23,7 @@ function emptyState() {
   return Object.freeze({ version: 1 });
 }
 
-function asRecord(value, message = "VoiceFlow credentials are invalid.") {
+function asRecord(value, message = "AudioFlow credentials are invalid.") {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
     throw new Error(message);
   }
@@ -50,16 +50,16 @@ function parseActive(value) {
   const active = asRecord(value);
   if (Object.hasOwn(active, "apiOrigin")) {
     throw new Error(
-      "VoiceFlow credentials contain the retired apiOrigin field. Remove apiOrigin and retry.",
+      "AudioFlow credentials contain the retired apiOrigin field. Remove apiOrigin and retry.",
     );
   }
   if (
     typeof active.token !== "string" ||
-    !VOICEFLOW_TOKEN_PATTERN.test(active.token) ||
+    !AUDIOFLOW_TOKEN_PATTERN.test(active.token) ||
     typeof active.approvedAt !== "string" ||
     !Number.isFinite(Date.parse(active.approvedAt))
   ) {
-    throw new Error("VoiceFlow credentials are invalid.");
+    throw new Error("AudioFlow credentials are invalid.");
   }
   return Object.freeze({
     token: active.token,
@@ -67,7 +67,7 @@ function parseActive(value) {
     ...(optionalString(
       active.apiTokenId,
       UUID_PATTERN,
-      "VoiceFlow credentials are invalid.",
+      "AudioFlow credentials are invalid.",
     ) === undefined
       ? {}
       : { apiTokenId: active.apiTokenId }),
@@ -79,7 +79,7 @@ function parsePending(value) {
   const pending = asRecord(value);
   if (
     typeof pending.token !== "string" ||
-    !VOICEFLOW_TOKEN_PATTERN.test(pending.token) ||
+    !AUDIOFLOW_TOKEN_PATTERN.test(pending.token) ||
     typeof pending.pollSecret !== "string" ||
     !POLL_SECRET_PATTERN.test(pending.pollSecret) ||
     typeof pending.clientName !== "string" ||
@@ -90,20 +90,20 @@ function parsePending(value) {
         pending.clientVersion.length < 1 ||
         pending.clientVersion.length > 32))
   ) {
-    throw new Error("VoiceFlow pending credentials are invalid.");
+    throw new Error("AudioFlow pending credentials are invalid.");
   }
   const requestId = optionalString(
     pending.requestId,
     UUID_PATTERN,
-    "VoiceFlow pending credentials are invalid.",
+    "AudioFlow pending credentials are invalid.",
   );
   const userCode = optionalString(
     pending.userCode,
     USER_CODE_PATTERN,
-    "VoiceFlow pending credentials are invalid.",
+    "AudioFlow pending credentials are invalid.",
   );
   if ((requestId === undefined) !== (userCode === undefined)) {
-    throw new Error("VoiceFlow pending credentials are invalid.");
+    throw new Error("AudioFlow pending credentials are invalid.");
   }
   const complete = pending.verificationUriComplete;
   if (complete !== undefined) {
@@ -111,13 +111,13 @@ function parsePending(value) {
     try {
       parsed = new URL(complete);
     } catch {
-      throw new Error("VoiceFlow pending credentials are invalid.");
+      throw new Error("AudioFlow pending credentials are invalid.");
     }
     if (
       parsed.origin !== "https://audioflow123.com" ||
       parsed.pathname !== "/connect-agent"
     ) {
-      throw new Error("VoiceFlow pending credentials are invalid.");
+      throw new Error("AudioFlow pending credentials are invalid.");
     }
   }
   return Object.freeze({
@@ -127,7 +127,7 @@ function parsePending(value) {
     clientVersion: pending.clientVersion,
     startedAt: validTimestamp(
       pending.startedAt,
-      "VoiceFlow pending credentials are invalid.",
+      "AudioFlow pending credentials are invalid.",
     ),
     ...(requestId === undefined ? {} : { requestId, userCode }),
     ...(complete === undefined ? {} : { verificationUriComplete: complete }),
@@ -136,7 +136,7 @@ function parsePending(value) {
       : {
           expiresAt: validTimestamp(
             pending.expiresAt,
-            "VoiceFlow pending credentials are invalid.",
+            "AudioFlow pending credentials are invalid.",
           ),
         }),
     ...(pending.interval === undefined
@@ -146,7 +146,7 @@ function parsePending(value) {
             Number.isSafeInteger(pending.interval) && pending.interval >= 5
               ? pending.interval
               : (() => {
-                  throw new Error("VoiceFlow pending credentials are invalid.");
+                  throw new Error("AudioFlow pending credentials are invalid.");
                 })(),
         }),
   });
@@ -155,7 +155,7 @@ function parsePending(value) {
 function parseState(value) {
   const state = asRecord(value);
   if (state.version !== 1) {
-    throw new Error("VoiceFlow credentials use an unsupported version.");
+    throw new Error("AudioFlow credentials use an unsupported version.");
   }
   const active = parseActive(state.active);
   const pending = parsePending(state.pending);
@@ -172,42 +172,42 @@ export function resolveCredentialPath({
   homeDirectory = os.homedir(),
 } = {}) {
   const pathApi = platform === "win32" ? path.win32 : path.posix;
-  const override = environment.VOICEFLOW_CONFIG_DIR?.trim();
+  const override = environment.AUDIOFLOW_CONFIG_DIR?.trim();
   if (override) {
     if (!pathApi.isAbsolute(override)) {
-      throw new Error("VOICEFLOW_CONFIG_DIR must be an absolute path.");
+      throw new Error("AUDIOFLOW_CONFIG_DIR must be an absolute path.");
     }
     return pathApi.join(override, "credentials.json");
   }
   if (platform === "win32") {
     const appData = environment.APPDATA?.trim();
     if (!appData || !pathApi.isAbsolute(appData)) {
-      throw new Error("APPDATA is unavailable for VoiceFlow credentials.");
+      throw new Error("APPDATA is unavailable for AudioFlow credentials.");
     }
-    return pathApi.join(appData, "VoiceFlow", "credentials.json");
+    return pathApi.join(appData, "AudioFlow", "credentials.json");
   }
   const xdg = environment.XDG_CONFIG_HOME?.trim();
   const base =
     xdg && pathApi.isAbsolute(xdg)
       ? xdg
       : pathApi.join(homeDirectory, ".config");
-  return pathApi.join(base, "voiceflow", "credentials.json");
+  return pathApi.join(base, "audioflow", "credentials.json");
 }
 
 async function assertSafeCredentialFile(filePath) {
   const info = await lstat(filePath);
   if (!info.isFile() || info.isSymbolicLink()) {
-    throw new Error("VoiceFlow credential path is not a regular file.");
+    throw new Error("AudioFlow credential path is not a regular file.");
   }
   if (process.platform !== "win32" && (info.mode & 0o077) !== 0) {
-    throw new Error("VoiceFlow credential file permissions must be 0600.");
+    throw new Error("AudioFlow credential file permissions must be 0600.");
   }
   if (
     process.platform !== "win32" &&
     typeof process.getuid === "function" &&
     info.uid !== process.getuid()
   ) {
-    throw new Error("VoiceFlow credential file has an unexpected owner.");
+    throw new Error("AudioFlow credential file has an unexpected owner.");
   }
 }
 
@@ -215,18 +215,18 @@ async function assertSafeCredentialDirectory(directory) {
   const info = await lstat(directory);
   if (!info.isDirectory() || info.isSymbolicLink()) {
     throw new Error(
-      "VoiceFlow credential directory is not a regular directory.",
+      "AudioFlow credential directory is not a regular directory.",
     );
   }
   if (process.platform !== "win32" && (info.mode & 0o077) !== 0) {
-    throw new Error("VoiceFlow credential directory permissions must be 0700.");
+    throw new Error("AudioFlow credential directory permissions must be 0700.");
   }
   if (
     process.platform !== "win32" &&
     typeof process.getuid === "function" &&
     info.uid !== process.getuid()
   ) {
-    throw new Error("VoiceFlow credential directory has an unexpected owner.");
+    throw new Error("AudioFlow credential directory has an unexpected owner.");
   }
 }
 
@@ -243,15 +243,15 @@ export async function readCredentialState(options = {}) {
   }
   const text = await readFile(filePath, "utf8");
   if (Buffer.byteLength(text, "utf8") > MAXIMUM_CREDENTIAL_BYTES) {
-    throw new Error("VoiceFlow credential file is too large.");
+    throw new Error("AudioFlow credential file is too large.");
   }
   try {
     return parseState(JSON.parse(text));
   } catch (error) {
-    if (error instanceof Error && error.message.startsWith("VoiceFlow")) {
+    if (error instanceof Error && error.message.startsWith("AudioFlow")) {
       throw error;
     }
-    throw new Error("VoiceFlow credentials are invalid.");
+    throw new Error("AudioFlow credentials are invalid.");
   }
 }
 
@@ -294,12 +294,12 @@ export async function writeCredentialState(state, options = {}) {
   }
 }
 
-export async function loadVoiceflowToken(options = {}) {
+export async function loadAudioflowToken(options = {}) {
   const environment = options.environment ?? process.env;
-  const candidate = environment.VOICEFLOW_TOKEN?.trim() ?? "";
+  const candidate = environment.AUDIOFLOW_TOKEN?.trim() ?? "";
   if (candidate !== "") {
-    if (!VOICEFLOW_TOKEN_PATTERN.test(candidate)) {
-      throw new Error("VOICEFLOW_TOKEN is invalid.");
+    if (!AUDIOFLOW_TOKEN_PATTERN.test(candidate)) {
+      throw new Error("AUDIOFLOW_TOKEN is invalid.");
     }
     return Object.freeze({ token: candidate, source: "environment" });
   }
@@ -326,7 +326,7 @@ export async function promotePendingCredentials(
 ) {
   const state = await readCredentialState(options);
   if (state.pending === undefined) {
-    throw new Error("No pending VoiceFlow credentials are available.");
+    throw new Error("No pending AudioFlow credentials are available.");
   }
   await writeCredentialState(
     {
@@ -342,8 +342,8 @@ export async function promotePendingCredentials(
 }
 
 export function maskedToken(token) {
-  if (!VOICEFLOW_TOKEN_PATTERN.test(token)) {
-    throw new Error("VoiceFlow token is invalid.");
+  if (!AUDIOFLOW_TOKEN_PATTERN.test(token)) {
+    throw new Error("AudioFlow token is invalid.");
   }
   return `${token.slice(0, 15)}…${token.slice(-4)}`;
 }

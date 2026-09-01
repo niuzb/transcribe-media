@@ -12,7 +12,7 @@ import path from "node:path";
 import test from "node:test";
 import {
   clearPendingCredentials,
-  loadVoiceflowToken,
+  loadAudioflowToken,
   maskedToken,
   promotePendingCredentials,
   readCredentialState,
@@ -26,7 +26,7 @@ const POLL_SECRET = "b".repeat(43);
 
 function options(root) {
   return {
-    environment: { VOICEFLOW_CONFIG_DIR: root },
+    environment: { AUDIOFLOW_CONFIG_DIR: root },
     platform: process.platform,
     homeDirectory: root,
   };
@@ -39,7 +39,7 @@ test("resolves portable user configuration paths", () => {
       platform: "linux",
       homeDirectory: "/home/test",
     }),
-    "/config/voiceflow/credentials.json",
+    "/config/audioflow/credentials.json",
   );
   assert.equal(
     resolveCredentialPath({
@@ -49,14 +49,14 @@ test("resolves portable user configuration paths", () => {
     }),
     path.win32.join(
       "C:\\Users\\test\\AppData\\Roaming",
-      "VoiceFlow",
+      "AudioFlow",
       "credentials.json",
     ),
   );
   assert.throws(
     () =>
       resolveCredentialPath({
-        environment: { VOICEFLOW_CONFIG_DIR: "relative" },
+        environment: { AUDIOFLOW_CONFIG_DIR: "relative" },
         platform: "linux",
         homeDirectory: "/home/test",
       }),
@@ -65,7 +65,7 @@ test("resolves portable user configuration paths", () => {
 });
 
 test("writes credentials atomically with private permissions", async () => {
-  const root = await mkdtemp(path.join(os.tmpdir(), "voiceflow-credentials-"));
+  const root = await mkdtemp(path.join(os.tmpdir(), "audioflow-credentials-"));
   try {
     await writeCredentialState(
       {
@@ -96,7 +96,7 @@ test("writes credentials atomically with private permissions", async () => {
 
 test("rejects loose credential file permissions", async () => {
   if (process.platform === "win32") return;
-  const root = await mkdtemp(path.join(os.tmpdir(), "voiceflow-credentials-"));
+  const root = await mkdtemp(path.join(os.tmpdir(), "audioflow-credentials-"));
   try {
     const filePath = path.join(root, "credentials.json");
     await writeFile(filePath, '{"version":1}\n', { mode: 0o644 });
@@ -108,7 +108,7 @@ test("rejects loose credential file permissions", async () => {
 });
 
 test("rejects credentials containing the retired API origin", async () => {
-  const root = await mkdtemp(path.join(os.tmpdir(), "voiceflow-credentials-"));
+  const root = await mkdtemp(path.join(os.tmpdir(), "audioflow-credentials-"));
   try {
     const filePath = path.join(root, "credentials.json");
     await writeFile(
@@ -133,14 +133,14 @@ test("rejects credentials containing the retired API origin", async () => {
 });
 
 test("prefers the environment and promotes resumable pending credentials", async () => {
-  const root = await mkdtemp(path.join(os.tmpdir(), "voiceflow-credentials-"));
+  const root = await mkdtemp(path.join(os.tmpdir(), "audioflow-credentials-"));
   try {
     await savePendingCredentials(
       {
         token: TOKEN,
         pollSecret: POLL_SECRET,
         clientName: "transcribe-media",
-        clientVersion: "1.3.0",
+        clientVersion: "1.4.0",
         startedAt: new Date().toISOString(),
       },
       options(root),
@@ -155,7 +155,7 @@ test("prefers the environment and promotes resumable pending credentials", async
       },
       options(root),
     );
-    assert.deepEqual(await loadVoiceflowToken(options(root)), {
+    assert.deepEqual(await loadAudioflowToken(options(root)), {
       token: TOKEN,
       source: "configuration",
     });
@@ -166,11 +166,11 @@ test("prefers the environment and promotes resumable pending credentials", async
       false,
     );
     assert.deepEqual(
-      await loadVoiceflowToken({
+      await loadAudioflowToken({
         ...options(root),
         environment: {
-          VOICEFLOW_CONFIG_DIR: root,
-          VOICEFLOW_TOKEN: `vf_stt_${"z".repeat(43)}`,
+          AUDIOFLOW_CONFIG_DIR: root,
+          AUDIOFLOW_TOKEN: `vf_stt_${"z".repeat(43)}`,
         },
       }),
       { token: `vf_stt_${"z".repeat(43)}`, source: "environment" },

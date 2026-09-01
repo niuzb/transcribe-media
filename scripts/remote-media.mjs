@@ -40,7 +40,7 @@ const LIVE_STATUSES = new Set(["is_live", "is_upcoming", "post_live"]);
 const XIAOYUZHOU_HOSTS = new Set(["www.xiaoyuzhoufm.com", "xiaoyuzhoufm.com"]);
 const XIAOYUZHOU_EPISODE_PATH = /^\/episode\/[0-9a-f]{24}\/?$/iu;
 export const REMOTE_ASR_CONSENT_MESSAGE =
-  "Remote ASR consent is required. No media was uploaded. After the user explicitly agrees to send this media over HTTPS to VoiceFlow at https://asr.audioflow123.com and to a provider-issued signed HTTPS object-storage URL for transcription, rerun with --allow-remote-asr. VoiceFlow deletes the uploaded media as soon as transcription reaches a terminal state, before returning that result. If immediate best-effort deletion is interrupted, the private storage bucket's mandatory lifecycle removes the object within 2–3 days.";
+  "Remote ASR consent is required. No media was uploaded. After the user explicitly agrees to send this media over HTTPS to AudioFlow at https://asr.audioflow123.com and to a signed HTTPS object-storage URL for transcription, rerun with --allow-remote-asr. AudioFlow deletes the uploaded media as soon as transcription reaches a terminal state, before returning that result. If immediate best-effort deletion is interrupted, the private storage bucket's mandatory lifecycle removes the object within 2–3 days.";
 const MEDIA_FORMAT_SELECTOR = [
   "bestaudio[ext=m4a]",
   "bestaudio[ext=webm]",
@@ -155,7 +155,7 @@ async function assertPublicHostname(url, lookupImpl, signal) {
 
 function sanitizedEnvironment(environment) {
   const result = { ...environment };
-  delete result.VOICEFLOW_TOKEN;
+  delete result.AUDIOFLOW_TOKEN;
   return result;
 }
 
@@ -592,7 +592,7 @@ async function downloadMedia(
     }
   }
   throw new Error(
-    "No VoiceFlow-compatible media format was available. FFmpeg may add support; do not install it without the user's explicit approval.",
+    "No AudioFlow-compatible media format was available. FFmpeg may add support; do not install it without the user's explicit approval.",
   );
 }
 
@@ -658,7 +658,7 @@ export async function resolveRemoteInput({
     environment,
   });
   const temporaryDirectory = await mkdtemp(
-    path.join(temporaryBase, "voiceflow-remote-"),
+    path.join(temporaryBase, "audioflow-remote-"),
   );
   await chmod(temporaryDirectory, 0o700);
   let retained = false;
@@ -675,7 +675,7 @@ export async function resolveRemoteInput({
           path.join(temporaryDirectory, "subtitle"),
           { signal, runYtDlpImpl, environment },
         );
-        progress("Using an existing subtitle; VoiceFlow ASR was not called.\n");
+        progress("Using an existing subtitle; AudioFlow ASR was not called.\n");
         return Object.freeze({ kind: "subtitle", text });
       } catch (error) {
         if (signal?.aborted) throw error;

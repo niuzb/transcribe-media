@@ -19,7 +19,7 @@ node "{baseDir}/scripts/transcribe.mjs" --url "<complete Xiaoyuzhou episode URL>
 ```
 
 The script skips caption extraction, retrieves the public episode audio through
-the controlled media downloader, and then follows the VoiceFlow authorization
+the controlled media downloader, and then follows the AudioFlow authorization
 workflow in the main `SKILL.md` before running ASR. Do not add the removed
 `--xiaoyuzhou-mode` option.
 
@@ -34,4 +34,4 @@ transcript interfaces, and do not read or store Xiaoyuzhou account credentials.
 
 Treat the ASR result as an immutable raw transcript and follow the direct-output
 rules in the main `SKILL.md`. After obtaining a result, do not download the audio
-again or call VoiceFlow again.
+again or call AudioFlow again.

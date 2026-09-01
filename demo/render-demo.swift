@@ -356,7 +356,7 @@ func drawSceneFour(time: Double, alpha: CGFloat) {
                reveal: (time - 17.1) / 0.35, alpha: alpha)
   terminalLine("✓ Approved for this run", x: 101, y: 462, color: Palette.green,
                reveal: (time - 17.9) / 0.35, alpha: alpha)
-  terminalLine("Transcribing with VoiceFlow…", x: 101, y: 513, color: Palette.purple,
+  terminalLine("Transcribing with AudioFlow…", x: 101, y: 513, color: Palette.purple,
                reveal: (time - 18.5) / 0.35, alpha: alpha)
 
   let badgeOne = alpha * CGFloat(easeOut((time - 16.2) / 0.6))

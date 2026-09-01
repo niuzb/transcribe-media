@@ -1,17 +1,17 @@
 ---
 name: transcribe-media
-description: Fetch and read transcripts from YouTube videos, public podcast episodes (including Xiaoyuzhou), other public single-item media links, and local audio or video files. Use when the user needs the full transcript, a summary, answers about the content, or extracted information. Prefer existing captions or official transcripts and use VoiceFlow ASR only when no usable text exists.
+description: Fetch and read transcripts from YouTube videos, public podcast episodes (including Xiaoyuzhou), other public single-item media links, and local audio or video files. Use when the user needs the full transcript, a summary, answers about the content, or extracted information. Prefer existing captions or official transcripts and use AudioFlow ASR only when no usable text exists.
 allowed-tools: Read,Write,Bash
 metadata:
   openclaw:
     requires:
       bins: [node]
-    primaryEnv: VOICEFLOW_TOKEN
+    primaryEnv: AUDIOFLOW_TOKEN
     envVars:
-      - name: VOICEFLOW_TOKEN
+      - name: AUDIOFLOW_TOKEN
         required: false
-        description: Optional VoiceFlow user API token; browser authorization obtains one when absent.
-      - name: VOICEFLOW_CONFIG_DIR
+        description: Optional AudioFlow user API token; browser authorization obtains one when absent.
+      - name: AUDIOFLOW_CONFIG_DIR
         required: false
         description: Optional absolute credential directory; defaults to the user configuration directory.
     emoji: "🎙️"
@@ -25,6 +25,20 @@ obtain a full transcript, summarize media, answer questions about its content,
 or extract requested information. Unless the user explicitly asks for analysis
 or transformation, return the source transcript verbatim.
 
+## Prerequisites
+
+Before installing and using the complete skill, the user must:
+
+1. create an account on the
+   [AudioFlow sign-up page](https://audioflow123.com/signup); and
+2. add prepaid credit on the
+   [AudioFlow billing page](https://audioflow123.com/dashboard/billing).
+
+Existing captions can be extracted without consuming AudioFlow balance, but
+registration and prepaid credit are required for ASR when no usable captions
+exist. Never request or handle the user's account password or payment
+credentials.
+
 ## Core workflow
 
 Process requests in this order:
@@ -36,7 +50,7 @@ Process requests in this order:
 3. Before downloading a managed tool or sending media off-device, disclose the
    exact action and obtain the user's explicit approval for that action.
 4. Only when no usable text exists and the user approves remote processing,
-   obtain the required VoiceFlow token and run ASR.
+   obtain the required AudioFlow token and run ASR.
 5. Treat the obtained transcript as the source of truth. Return it verbatim when
    the user asks only for a transcript. When the user explicitly asks for a
    summary, answers, or information extraction, perform only that requested task
@@ -58,11 +72,10 @@ user's explicit approval.
 Before adding `--allow-remote-asr`, tell the user that:
 
 - the local media or downloaded/extracted audio, plus its filename, content type,
-  and size, will be sent over HTTPS to the VoiceFlow API at
-  `https://asr.audioflow123.com` and to a provider-issued signed HTTPS object
-  storage URL;
-- the VoiceFlow token is sent only to the API, not to the signed storage URL;
-- VoiceFlow deletes the uploaded media as soon as transcription reaches a
+  and size, will be sent over HTTPS to the AudioFlow API at
+  `https://asr.audioflow123.com` and to a signed HTTPS object-storage URL;
+- the AudioFlow token is sent only to the API, not to the signed storage URL;
+- AudioFlow deletes the uploaded media as soon as transcription reaches a
   terminal state, before returning that terminal result. The deletion is
   idempotent and best-effort; if it is interrupted, the private storage bucket's
   mandatory lifecycle policy removes the object within 2–3 days; and
@@ -71,7 +84,7 @@ Before adding `--allow-remote-asr`, tell the user that:
 Ask a direct yes-or-no question. Add `--allow-remote-asr` only after the user
 explicitly agrees. If the user declines or does not answer, stop without upload.
 
-## Obtain a VoiceFlow token
+## Obtain an AudioFlow token
 
 A public media page may expose captions or an official transcript. Run the
 transcription command first for a URL and authorize only if the script reports
@@ -100,15 +113,15 @@ run:
 node "{baseDir}/scripts/auth.mjs" wait
 ```
 
-The complete `vf_stt_` token is generated locally. The script submits only its
+The complete AudioFlow API token is generated locally. The script submits only its
 digest and stores the approved token in the operating-system user configuration
 directory; Unix credential files use mode `0600`. An existing
-`VOICEFLOW_TOKEN` takes precedence and must not be persisted. Never echo or log a
+`AUDIOFLOW_TOKEN` takes precedence and must not be persisted. Never echo or log a
 token, put it in command arguments, or write it to the repository.
 
 For an invalid token, run `begin` again. To revoke an old key or add prepaid
 credit, direct the user to the
-[VoiceFlow dashboard](https://audioflow123.com/dashboard).
+[AudioFlow dashboard](https://audioflow123.com/dashboard).
 
 ## Accept input
 
@@ -155,7 +168,7 @@ For Xiaoyuzhou, accept only a public episode URL matching
 without `www`. Reject podcast homepages, lists, live streams, and private or paid
 episodes.
 
-Xiaoyuzhou always requires public episode audio retrieval and VoiceFlow ASR.
+Xiaoyuzhou always requires public episode audio retrieval and AudioFlow ASR.
 Complete the external-processing disclosure and obtain approval before running
 the URL command with `--allow-remote-asr`. Do not add the removed
 `--xiaoyuzhou-mode` option.
@@ -189,7 +202,7 @@ Xiaoyuzhou, the script may return existing page captions without invoking ASR.
 Treat all returned text as an immutable raw transcript for the rest of the
 workflow.
 
-Do not send client hot words to the remote VoiceFlow path. They may contain
+Do not send client hot words to the remote AudioFlow path. They may contain
 private names, and the backend does not support prompts. Only an explicitly
 approved offline ASR tool may consume locally generated client hot words.
 
@@ -227,5 +240,6 @@ and ask for approval, then continue only after an explicit affirmative response.
 
 ## Version
 
-Version 1.7.0: expose transcript-based summarization, question answering, and
-information extraction while preserving transcript-first grounding.
+Version 1.8.0: use AudioFlow branding and credential names, document account
+registration and prepaid credit prerequisites, and preserve transcript-first
+grounding with ASR fallback.

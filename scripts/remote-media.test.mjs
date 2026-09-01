@@ -177,7 +177,7 @@ test("normalizes SRT, VTT, TTML, and JSON3 into distinct plain text", () => {
 });
 
 test("returns a human subtitle and removes its temporary files", async () => {
-  const root = await mkdtemp(path.join(os.tmpdir(), "voiceflow-remote-test-"));
+  const root = await mkdtemp(path.join(os.tmpdir(), "audioflow-remote-test-"));
   const calls = [];
   try {
     const result = await resolveRemoteInput({
@@ -218,7 +218,7 @@ test("returns a human subtitle and removes its temporary files", async () => {
 });
 
 test("falls back to one compatible media download when captions are ambiguous", async () => {
-  const root = await mkdtemp(path.join(os.tmpdir(), "voiceflow-remote-test-"));
+  const root = await mkdtemp(path.join(os.tmpdir(), "audioflow-remote-test-"));
   let mediaDownloads = 0;
   try {
     const result = await resolveRemoteInput({
@@ -260,7 +260,7 @@ test("falls back to one compatible media download when captions are ambiguous", 
 });
 
 test("does not download media before remote ASR consent", async () => {
-  const root = await mkdtemp(path.join(os.tmpdir(), "voiceflow-remote-test-"));
+  const root = await mkdtemp(path.join(os.tmpdir(), "audioflow-remote-test-"));
   let mediaDownloads = 0;
   try {
     await assert.rejects(
@@ -291,7 +291,7 @@ test("does not download media before remote ASR consent", async () => {
 });
 
 test("downloads standalone MP3 podcast audio exposed as the best format", async () => {
-  const root = await mkdtemp(path.join(os.tmpdir(), "voiceflow-remote-test-"));
+  const root = await mkdtemp(path.join(os.tmpdir(), "audioflow-remote-test-"));
   try {
     const result = await resolveRemoteInput({
       allowRemoteAsr: true,
@@ -331,7 +331,7 @@ test("downloads standalone MP3 podcast audio exposed as the best format", async 
 });
 
 test("always downloads Xiaoyuzhou episode audio instead of subtitles", async () => {
-  const root = await mkdtemp(path.join(os.tmpdir(), "voiceflow-remote-test-"));
+  const root = await mkdtemp(path.join(os.tmpdir(), "audioflow-remote-test-"));
   const calls = [];
   try {
     const result = await resolveRemoteInput({
@@ -373,7 +373,7 @@ test("always downloads Xiaoyuzhou episode audio instead of subtitles", async () 
 });
 
 test("requires approval when FFmpeg may add a compatible media format", async () => {
-  const root = await mkdtemp(path.join(os.tmpdir(), "voiceflow-remote-test-"));
+  const root = await mkdtemp(path.join(os.tmpdir(), "audioflow-remote-test-"));
   try {
     await assert.rejects(
       resolveRemoteInput({

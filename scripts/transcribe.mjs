@@ -12,7 +12,7 @@ import {
   REMOTE_ASR_CONSENT_MESSAGE,
   resolveRemoteInput,
 } from "./remote-media.mjs";
-import { loadVoiceflowToken } from "./credentials.mjs";
+import { loadAudioflowToken } from "./credentials.mjs";
 
 const MAXIMUM_FILE_BYTES = 512 * 1024 * 1024;
 const MAXIMUM_RESPONSE_BYTES = 1024 * 1024;
@@ -21,7 +21,7 @@ const MAXIMUM_FFMPEG_STDERR_BYTES = 8 * 1024;
 const CLEANUP_TIMEOUT_MS = 10_000;
 const DEFAULT_POLL_INTERVAL_MS = 2_000;
 const DEFAULT_TIMEOUT_MS = 30 * 60 * 1_000;
-const VOICEFLOW_BASE_URL = "https://asr.audioflow123.com";
+const AUDIOFLOW_BASE_URL = "https://asr.audioflow123.com";
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu;
 const RUNNING_STATES = new Set([
@@ -50,7 +50,7 @@ const FFMPEG_INSTALL_MESSAGE =
 
 function printHelp() {
   process.stdout.write(
-    `VoiceFlow speech-to-text\n\nUsage:\n  node transcribe.mjs --file <path> [options]\n  node transcribe.mjs --url <https-url> [options]\n\nOptions:\n  --file <path>               Local FLAC, M4A, MP3, MP4, MPEG, OGG, WAV, or WebM file\n  --url <https-url>           Public single-video or podcast-episode URL supported by yt-dlp\n  --language <code>           Preferred source language, for example zh or en\n  --model <name>              ASR model (default: gpt-4o-transcribe-diarize)\n  --provider <name>           auto, qianwen, or bigasr (default: auto)\n  --poll-interval-ms <number> Poll interval (default: 2000)\n  --timeout-ms <number>       Overall timeout (default: 1800000)\n  --allow-remote-asr          Confirm explicit approval for this run's remote media upload\n  --allow-tool-download       Confirm explicit approval to cache the pinned yt-dlp release\n  --help                      Show this help\n`,
+    `AudioFlow speech-to-text\n\nUsage:\n  node transcribe.mjs --file <path> [options]\n  node transcribe.mjs --url <https-url> [options]\n\nOptions:\n  --file <path>               Local FLAC, M4A, MP3, MP4, MPEG, OGG, WAV, or WebM file\n  --url <https-url>           Public single-video or podcast-episode URL supported by yt-dlp\n  --language <code>           Preferred source language, for example zh or en\n  --model <name>              ASR model (default: gpt-4o-transcribe-diarize)\n  --provider <name>           auto, qianwen, or bigasr (default: auto)\n  --poll-interval-ms <number> Poll interval (default: 2000)\n  --timeout-ms <number>       Overall timeout (default: 1800000)\n  --allow-remote-asr          Confirm explicit approval for this run's remote media upload\n  --allow-tool-download       Confirm explicit approval to cache the pinned yt-dlp release\n  --help                      Show this help\n`,
   );
 }
 
@@ -71,7 +71,7 @@ async function extractAudioWithFfmpeg(
   { signal, spawnImpl = spawn } = {},
 ) {
   const temporaryDirectory = await mkdtemp(
-    path.join(os.tmpdir(), "voiceflow-video-audio-"),
+    path.join(os.tmpdir(), "audioflow-video-audio-"),
   );
   const outputFilePath = path.join(temporaryDirectory, "media.mp3");
   let ffmpeg;
@@ -266,17 +266,17 @@ export function parseArguments(argumentsList) {
 }
 
 export async function loadConfiguration({
-  loadVoiceflowTokenImpl = loadVoiceflowToken,
+  loadAudioflowTokenImpl = loadAudioflowToken,
 } = {}) {
-  const credential = await loadVoiceflowTokenImpl();
+  const credential = await loadAudioflowTokenImpl();
   if (credential === null) {
     throw new Error(
-      "VoiceFlow authorization is required. Run auth.mjs begin, approve the browser request, then run auth.mjs wait.",
+      "AudioFlow authorization is required. Run auth.mjs begin, approve the browser request, then run auth.mjs wait.",
     );
   }
   return Object.freeze({
     token: credential.token,
-    baseUrl: VOICEFLOW_BASE_URL,
+    baseUrl: AUDIOFLOW_BASE_URL,
   });
 }
 
@@ -309,7 +309,7 @@ export async function inspectMedia(filePath) {
 
 function asRecord(value) {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
-    throw new Error("The VoiceFlow API returned an invalid response.");
+    throw new Error("The AudioFlow API returned an invalid response.");
   }
   return value;
 }
@@ -320,16 +320,16 @@ async function readJson(response) {
     Number.isFinite(contentLength) &&
     contentLength > MAXIMUM_RESPONSE_BYTES
   ) {
-    throw new Error("The VoiceFlow API response was too large.");
+    throw new Error("The AudioFlow API response was too large.");
   }
   const text = await response.text();
   if (Buffer.byteLength(text, "utf8") > MAXIMUM_RESPONSE_BYTES) {
-    throw new Error("The VoiceFlow API response was too large.");
+    throw new Error("The AudioFlow API response was too large.");
   }
   try {
     return asRecord(JSON.parse(text));
   } catch {
-    throw new Error("The VoiceFlow API returned invalid JSON.");
+    throw new Error("The AudioFlow API returned invalid JSON.");
   }
 }
 
@@ -364,7 +364,7 @@ async function requestBackend(
       signal,
     });
   } catch {
-    throw new Error("The VoiceFlow API request failed.");
+    throw new Error("The AudioFlow API request failed.");
   }
   if (!expectedStatuses.includes(response.status)) {
     let code = "";
@@ -375,16 +375,16 @@ async function requestBackend(
     }
     if (response.status === 401) {
       throw new Error(
-        "VoiceFlow authorization is invalid or expired. Start a new browser authorization request.",
+        "AudioFlow authorization is invalid or expired. Start a new browser authorization request.",
       );
     }
     if (response.status === 402) {
       throw new Error(
-        "VoiceFlow prepaid balance or API key spending limit is insufficient. Add credit or update the key limit in the AudioFlow dashboard.",
+        "AudioFlow prepaid balance or API key spending limit is insufficient. Add credit or update the key limit in the AudioFlow dashboard.",
       );
     }
     throw new Error(
-      `The VoiceFlow API returned HTTP ${response.status}${code}.`,
+      `The AudioFlow API returned HTTP ${response.status}${code}.`,
     );
   }
   return response.status === 204 ? undefined : await readJson(response);
@@ -741,7 +741,7 @@ async function transcribe(options, configuration, media, signal) {
       health.ready !== true ||
       health.shutting_down !== false
     ) {
-      throw new Error("The VoiceFlow API is not ready.");
+      throw new Error("The AudioFlow API is not ready.");
     }
     const session = await createUpload(configuration, media, signal);
     uploadId = session.id;

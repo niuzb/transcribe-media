@@ -16,7 +16,7 @@ const XIAOYUZHOU_URL =
 test("always uses the shared production API origin", async () => {
   assert.deepEqual(
     await loadConfiguration({
-      loadVoiceflowTokenImpl: async () => ({
+      loadAudioflowTokenImpl: async () => ({
         token: "test",
         apiOrigin: "https://asr.audioflow123.com",
       }),
@@ -25,7 +25,7 @@ test("always uses the shared production API origin", async () => {
   );
   assert.deepEqual(
     await loadConfiguration({
-      loadVoiceflowTokenImpl: async () => ({ token: "test" }),
+      loadAudioflowTokenImpl: async () => ({ token: "test" }),
     }),
     { token: "test", baseUrl: "https://asr.audioflow123.com" },
   );
@@ -388,7 +388,7 @@ test("cleans converted local video media when ASR fails", async () => {
 });
 
 test("keeps the 512 MiB local and downloaded media limit", async () => {
-  const root = await mkdtemp(path.join(os.tmpdir(), "voiceflow-media-test-"));
+  const root = await mkdtemp(path.join(os.tmpdir(), "audioflow-media-test-"));
   const filePath = path.join(root, "oversized.m4a");
   try {
     await writeFile(filePath, "x");

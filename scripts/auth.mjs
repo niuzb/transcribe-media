@@ -6,7 +6,7 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 import {
   clearPendingCredentials,
-  loadVoiceflowToken,
+  loadAudioflowToken,
   maskedToken,
   promotePendingCredentials,
   readCredentialState,
@@ -15,7 +15,7 @@ import {
 
 const CONTROL_ORIGIN = "https://audioflow123.com";
 const DEFAULT_CLIENT_NAME = "transcribe-media";
-const DEFAULT_CLIENT_VERSION = "1.3.0";
+const DEFAULT_CLIENT_VERSION = "1.4.0";
 const MAXIMUM_RESPONSE_BYTES = 64 * 1024;
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu;
@@ -23,7 +23,7 @@ const USER_CODE_PATTERN = /^[A-HJ-NP-Z2-9]{8}$/u;
 
 function printHelp() {
   process.stdout.write(
-    "VoiceFlow Agent authorization\n\n" +
+    "AudioFlow Agent authorization\n\n" +
       "Usage:\n" +
       "  node auth.mjs begin [--client-name <name>] [--client-version <version>]\n" +
       "  node auth.mjs wait\n" +
@@ -73,7 +73,7 @@ function generatePollSecret() {
 async function readJson(response) {
   const text = await response.text();
   if (Buffer.byteLength(text, "utf8") > MAXIMUM_RESPONSE_BYTES) {
-    throw new Error("The VoiceFlow authorization response was too large.");
+    throw new Error("The AudioFlow authorization response was too large.");
   }
   try {
     const value = JSON.parse(text);
@@ -82,7 +82,7 @@ async function readJson(response) {
     }
     return value;
   } catch {
-    throw new Error("The VoiceFlow authorization response was invalid.");
+    throw new Error("The AudioFlow authorization response was invalid.");
   }
 }
 
@@ -107,7 +107,7 @@ async function postJson(fetchImpl, pathname, body, signal) {
       signal,
     });
   } catch {
-    throw new Error("The VoiceFlow authorization request failed.");
+    throw new Error("The AudioFlow authorization request failed.");
   }
   return response;
 }
@@ -124,14 +124,14 @@ function parseCreatedRequest(body) {
     !Number.isSafeInteger(body.interval) ||
     body.interval < 5
   ) {
-    throw new Error("The VoiceFlow authorization response was invalid.");
+    throw new Error("The AudioFlow authorization response was invalid.");
   }
   const verificationUrl = new URL(body.verification_uri_complete);
   if (
     verificationUrl.origin !== CONTROL_ORIGIN ||
     verificationUrl.pathname !== "/connect-agent"
   ) {
-    throw new Error("The VoiceFlow authorization response was invalid.");
+    throw new Error("The AudioFlow authorization response was invalid.");
   }
   return Object.freeze({
     requestId: body.request_id,
@@ -160,7 +160,7 @@ export async function beginAuthorization(
     signal = AbortSignal.timeout(15_000),
   } = {},
 ) {
-  const configured = await loadVoiceflowToken(credentialOptions);
+  const configured = await loadAudioflowToken(credentialOptions);
   if (configured !== null) {
     return Object.freeze({
       status: "connected",
@@ -213,7 +213,7 @@ export async function beginAuthorization(
   const body = await readJson(response);
   if (response.status !== 201) {
     throw new Error(
-      `VoiceFlow authorization could not start (${safeErrorCode(body)}).`,
+      `AudioFlow authorization could not start (${safeErrorCode(body)}).`,
     );
   }
   const created = parseCreatedRequest(body);
@@ -236,7 +236,7 @@ export async function waitForAuthorization({
     pending.interval === undefined
   ) {
     throw new Error(
-      "No resumable VoiceFlow authorization request is available.",
+      "No resumable AudioFlow authorization request is available.",
     );
   }
   const controller = new AbortController();
@@ -265,7 +265,7 @@ export async function waitForAuthorization({
           (typeof body.api_token_id !== "string" ||
             !UUID_PATTERN.test(body.api_token_id))
         ) {
-          throw new Error("The VoiceFlow authorization response was invalid.");
+          throw new Error("The AudioFlow authorization response was invalid.");
         }
         await promotePendingCredentials(
           {
@@ -314,14 +314,14 @@ export async function waitForAuthorization({
         await clearPendingCredentials(credentialOptions);
         throw new Error(
           response.status === 403
-            ? "The VoiceFlow authorization request was denied."
-            : "The VoiceFlow authorization request expired.",
+            ? "The AudioFlow authorization request was denied."
+            : "The AudioFlow authorization request expired.",
         );
       }
-      throw new Error(`VoiceFlow authorization failed (${code}).`);
+      throw new Error(`AudioFlow authorization failed (${code}).`);
     }
     throw new Error(
-      "The VoiceFlow authorization request expired or was interrupted.",
+      "The AudioFlow authorization request expired or was interrupted.",
     );
   } catch (error) {
     if (combinedSignal.aborted) {
@@ -329,7 +329,7 @@ export async function waitForAuthorization({
         await clearPendingCredentials(credentialOptions);
       }
       throw new Error(
-        "The VoiceFlow authorization request expired or was interrupted.",
+        "The AudioFlow authorization request expired or was interrupted.",
       );
     }
     throw error;
@@ -339,7 +339,7 @@ export async function waitForAuthorization({
 }
 
 export async function authorizationStatus({ credentialOptions = {} } = {}) {
-  const configured = await loadVoiceflowToken(credentialOptions);
+  const configured = await loadAudioflowToken(credentialOptions);
   if (configured !== null) {
     return Object.freeze({
       status: "connected",

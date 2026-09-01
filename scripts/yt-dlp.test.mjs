@@ -71,7 +71,7 @@ test("uses a sufficiently recent system downloader without fetching", async () =
 });
 
 test("requires approval before downloading a managed downloader", async () => {
-  const root = await mkdtemp(path.join(os.tmpdir(), "voiceflow-ytdlp-test-"));
+  const root = await mkdtemp(path.join(os.tmpdir(), "audioflow-ytdlp-test-"));
   let fetched = false;
   try {
     await assert.rejects(
@@ -127,7 +127,7 @@ test("uses the platform user cache without trusting a relative override", () => 
 });
 
 test("downloads, verifies, atomically caches, and reuses an asset", async () => {
-  const root = await mkdtemp(path.join(os.tmpdir(), "voiceflow-ytdlp-test-"));
+  const root = await mkdtemp(path.join(os.tmpdir(), "audioflow-ytdlp-test-"));
   const bytes = Buffer.from("verified yt-dlp fixture");
   const asset = Object.freeze({
     filename: "yt-dlp-test",
@@ -162,7 +162,7 @@ test("downloads, verifies, atomically caches, and reuses an asset", async () => 
 });
 
 test("rejects a bad digest and removes partial cache files", async () => {
-  const root = await mkdtemp(path.join(os.tmpdir(), "voiceflow-ytdlp-test-"));
+  const root = await mkdtemp(path.join(os.tmpdir(), "audioflow-ytdlp-test-"));
   const asset = Object.freeze({
     filename: "yt-dlp-test",
     sha256: digest("expected"),
@@ -183,7 +183,7 @@ test("rejects a bad digest and removes partial cache files", async () => {
 });
 
 test("rejects an oversized release before reading its body", async () => {
-  const root = await mkdtemp(path.join(os.tmpdir(), "voiceflow-ytdlp-test-"));
+  const root = await mkdtemp(path.join(os.tmpdir(), "audioflow-ytdlp-test-"));
   const asset = Object.freeze({
     filename: "yt-dlp-test",
     sha256: digest("unused"),
@@ -208,7 +208,7 @@ test("rejects an oversized release before reading its body", async () => {
 });
 
 test("cleans partial state when the official release is offline", async () => {
-  const root = await mkdtemp(path.join(os.tmpdir(), "voiceflow-ytdlp-test-"));
+  const root = await mkdtemp(path.join(os.tmpdir(), "audioflow-ytdlp-test-"));
   const asset = Object.freeze({
     filename: "yt-dlp-test",
     sha256: digest("unused"),

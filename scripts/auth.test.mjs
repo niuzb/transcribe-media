@@ -16,7 +16,7 @@ const TOKEN_ID = "22222222-2222-4222-8222-222222222222";
 
 function credentialOptions(root) {
   return {
-    environment: { VOICEFLOW_CONFIG_DIR: root },
+    environment: { AUDIOFLOW_CONFIG_DIR: root },
     platform: process.platform,
     homeDirectory: root,
   };
@@ -30,11 +30,11 @@ function response(status, body, headers = {}) {
 }
 
 test("begin sends only token digests and prints resumable safe metadata", async () => {
-  const root = await mkdtemp(path.join(os.tmpdir(), "voiceflow-auth-"));
+  const root = await mkdtemp(path.join(os.tmpdir(), "audioflow-auth-"));
   let requestBody;
   try {
     const result = await beginAuthorization(
-      { clientName: "transcribe-media", clientVersion: "1.3.0" },
+      { clientName: "transcribe-media", clientVersion: "1.4.0" },
       {
         credentialOptions: credentialOptions(root),
         fetchImpl: async (_url, init) => {
@@ -71,7 +71,7 @@ test("begin sends only token digests and prints resumable safe metadata", async 
 });
 
 test("begin resumes an existing authorization without another request", async () => {
-  const root = await mkdtemp(path.join(os.tmpdir(), "voiceflow-auth-"));
+  const root = await mkdtemp(path.join(os.tmpdir(), "audioflow-auth-"));
   let calls = 0;
   const fetchImpl = async () => {
     calls += 1;
@@ -86,7 +86,7 @@ test("begin resumes an existing authorization without another request", async ()
   try {
     const options = {
       clientName: "transcribe-media",
-      clientVersion: "1.3.0",
+      clientVersion: "1.4.0",
     };
     await beginAuthorization(options, {
       credentialOptions: credentialOptions(root),
@@ -103,11 +103,11 @@ test("begin resumes an existing authorization without another request", async ()
 });
 
 test("wait promotes the local token, acknowledges, and never receives plaintext", async () => {
-  const root = await mkdtemp(path.join(os.tmpdir(), "voiceflow-auth-"));
+  const root = await mkdtemp(path.join(os.tmpdir(), "audioflow-auth-"));
   const calls = [];
   try {
     await beginAuthorization(
-      { clientName: "transcribe-media", clientVersion: "1.3.0" },
+      { clientName: "transcribe-media", clientVersion: "1.4.0" },
       {
         credentialOptions: credentialOptions(root),
         fetchImpl: async () =>
@@ -158,10 +158,10 @@ test("wait promotes the local token, acknowledges, and never receives plaintext"
 });
 
 test("denial clears pending local credentials", async () => {
-  const root = await mkdtemp(path.join(os.tmpdir(), "voiceflow-auth-"));
+  const root = await mkdtemp(path.join(os.tmpdir(), "audioflow-auth-"));
   try {
     await beginAuthorization(
-      { clientName: "transcribe-media", clientVersion: "1.3.0" },
+      { clientName: "transcribe-media", clientVersion: "1.4.0" },
       {
         credentialOptions: credentialOptions(root),
         fetchImpl: async () =>
@@ -196,10 +196,10 @@ test("denial clears pending local credentials", async () => {
 });
 
 test("credential files do not leak through safe status output", async () => {
-  const root = await mkdtemp(path.join(os.tmpdir(), "voiceflow-auth-"));
+  const root = await mkdtemp(path.join(os.tmpdir(), "audioflow-auth-"));
   try {
     await beginAuthorization(
-      { clientName: "transcribe-media", clientVersion: "1.3.0" },
+      { clientName: "transcribe-media", clientVersion: "1.4.0" },
       {
         credentialOptions: credentialOptions(root),
         fetchImpl: async () =>

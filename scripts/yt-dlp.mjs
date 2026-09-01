@@ -121,7 +121,7 @@ export function ytDlpCacheDirectory({
 
 function sanitizedEnvironment(environment) {
   const result = { ...environment };
-  delete result.VOICEFLOW_TOKEN;
+  delete result.AUDIOFLOW_TOKEN;
   return result;
 }
 
@@ -239,7 +239,7 @@ async function fetchReleaseAsset(url, { fetchImpl, signal }) {
   ) {
     validateReleaseUrl(current);
     const response = await fetchImpl(current, {
-      headers: { "User-Agent": "VoiceFlow-Transcribe/1.1" },
+      headers: { "User-Agent": "AudioFlow-Transcribe/1.1" },
       redirect: "manual",
       signal,
     });
